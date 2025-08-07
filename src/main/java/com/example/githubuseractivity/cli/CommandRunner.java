@@ -1,10 +1,12 @@
 package com.example.githubuseractivity.cli;
 
+import com.example.githubuseractivity.model.GitHubEvent;
 import com.example.githubuseractivity.service.GitHubService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Scanner;
 
 @Component
@@ -28,16 +30,53 @@ public class CommandRunner implements CommandLineRunner {
             if (option == 1) {
                 input.nextLine ();
 
-                System.out.println ("Enter the username: ");
+                System.out.print ("Enter the username: ");
                 String username = input.nextLine ();
 
-                String json = gitHubService.getUserEvents (username);
+                List <GitHubEvent> events = gitHubService.getUserEvents (username);
 
-                if (json == null) {
+                if (events == null) {
                     System.out.println ("Invalid username.");
                 } else {
                     System.out.println ("\nHere is the user's activity:");
-                    System.out.println (json);
+
+                    for (GitHubEvent e : events) {
+                        String type = e.getType ();
+                        String repo = e.getRepo ().getName ();
+
+                        if (type.equals ("PushEvent")) {
+                            int commits = 0;
+
+                            if (e.getPayload () != null && e.getPayload ().getCommits () != null) {
+                                commits = e.getPayload ().getCommits ().size ();
+                            }
+
+                            System.out.println ("- Pushed " + commits + " commits to " + repo);
+                        } else if (type.equals ("CreateEvent")) {
+                            String refType = e.getPayload () == null ? "" : e.getPayload ().getRefType ();
+                            String ref = e.getPayload () == null ? "" : e.getPayload ().getRef ();
+
+                            if (refType.equals ("repository")) {
+                                System.out.println ("- Created repository " + repo);
+                            } else if (refType.equals ("branch")) {
+                                System.out.println ("- Created branch " + ref + " in " + repo);
+                            } else {
+                                System.out.println ("- Created " + refType + " in " + repo);
+                            }
+                        } else if (type.equals ("IssuesEvent")) {
+                            String action = e.getPayload () == null ? "performed an action on" : e.getPayload ().getAction ();
+                            System.out.println ("- " + action + " an issue in " + repo);
+                        } else if (type.equals ("WatchEvent")) {
+                            System.out.println ("- Starred " + repo);
+                        } else if (type.equals ("ForkEvent")) {
+                            System.out.println ("- Forked " + repo);
+                        } else if (type.equals ("PullRequestEvent")) {
+                            String action = e.getPayload () == null ? "performed an action on" : e.getPayload ().getAction ();
+                            System.out.println ("- " + action + " a pull request in " + repo);
+                        } else {
+                            System.out.println ("- " + type + " event in " + repo);
+                        }
+                    }
                 }
             } else if (option == 2) {
                 System.out.println ("Thank you for using the program.");
