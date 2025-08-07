@@ -53,15 +53,22 @@ public class CommandRunner implements CommandLineRunner {
 
                             System.out.println ("- Pushed " + commits + " commits to " + repo);
                         } else if (type.equals ("CreateEvent")) {
-                            String refType = e.getPayload () == null ? "" : e.getPayload ().getRefType ();
-                            String ref = e.getPayload () == null ? "" : e.getPayload ().getRef ();
+                            String refType = "";
+                            String ref = "";
 
-                            if (refType.equals ("repository")) {
+                            if (e.getPayload () != null) {
+                                refType = e.getPayload ().getRefType () == null ? "" : e.getPayload ().getRefType ();
+                                ref = e.getPayload ().getRef () == null ? "" : e.getPayload ().getRef ();
+                            }
+
+                            if ("repository".equals (refType)) {
                                 System.out.println ("- Created repository " + repo);
-                            } else if (refType.equals ("branch")) {
+                            } else if ("branch".equals (refType)) {
                                 System.out.println ("- Created branch " + ref + " in " + repo);
-                            } else {
+                            } else if (!refType.isEmpty ()){
                                 System.out.println ("- Created " + refType + " in " + repo);
+                            } else {
+                                System.out.println ("- Created an item in " + repo);
                             }
                         } else if (type.equals ("IssuesEvent")) {
                             String action = e.getPayload () == null ? "performed an action on" : e.getPayload ().getAction ();
