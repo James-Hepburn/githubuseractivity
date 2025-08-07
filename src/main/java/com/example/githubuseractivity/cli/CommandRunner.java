@@ -1,5 +1,7 @@
 package com.example.githubuseractivity.cli;
 
+import com.example.githubuseractivity.service.GitHubService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -7,6 +9,9 @@ import java.util.Scanner;
 
 @Component
 public class CommandRunner implements CommandLineRunner {
+    @Autowired
+    private GitHubService gitHubService;
+
     private Scanner input = new Scanner (System.in);
 
     @Override
@@ -26,6 +31,14 @@ public class CommandRunner implements CommandLineRunner {
                 System.out.println ("Enter the username: ");
                 String username = input.nextLine ();
 
+                String json = gitHubService.getUserEvents (username);
+
+                if (json == null) {
+                    System.out.println ("Invalid username.");
+                } else {
+                    System.out.println ("\nHere is the user's activity:");
+                    System.out.println (json);
+                }
             } else if (option == 2) {
                 System.out.println ("Thank you for using the program.");
                 break;
